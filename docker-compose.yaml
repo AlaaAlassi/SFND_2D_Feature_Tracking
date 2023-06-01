@@ -20,4 +20,5 @@ services:
       volumes:
         - /tmp/.X11-unix:/tmp/.X11-unix:rw
         - ./:/home/SFND/
+        - /run/user/${UID}/gdm/Xauthority:/root/.Xauthority:rw
       command: tail -F anything

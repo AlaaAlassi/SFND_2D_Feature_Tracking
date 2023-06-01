@@ -58,9 +58,11 @@ FROM ubuntu:16.04
 # First: get all the dependencies:
 #
 RUN apt-get update
-RUN apt-get install -y cmake git libgtk2.0-dev pkg-config libavcodec-dev \
-libavformat-dev libswscale-dev python-dev python-numpy libtbb2 libtbb-dev \
-libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev unzip
+RUN apt-get install -y build-essential cmake git pkg-config libgtk-3-dev \
+    libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
+    libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev \
+    gfortran openexr libatlas-base-dev python3-dev python3-numpy \
+    libtbb2 libtbb-dev libdc1394-22-dev unzip
 
 RUN apt-get install -y wget
 
@@ -70,44 +72,19 @@ RUN apt-get install -y vim
 
 # Second: get and build OpenCV 3.2
 #
+ARG OPEN_CV_VERSION=4.1.0
 RUN cd \
-    && wget https://github.com/opencv/opencv/archive/4.1.0.zip \
-    && unzip 4.1.0.zip \
-    && cd opencv-4.1.0 \
-    && mkdir build \
-    && cd build \
-    && cmake .. \
+    && wget https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip \
+    && unzip ${OPEN_CV_VERSION}.zip \
+    && rm ${OPEN_CV_VERSION}.zip \
+    && wget https://github.com/opencv/opencv_contrib/archive/${OPEN_CV_VERSION}.zip \
+    && unzip ${OPEN_CV_VERSION}.zip \
+    && rm ${OPEN_CV_VERSION}.zip \
+    && mkdir build
+
+WORKDIR /root/build 
+RUN cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-${OPEN_CV_VERSION}/modules ../opencv-${OPEN_CV_VERSION} \
     && make -j8 \
-    && make install \
-    && cd \
-    && rm 4.1.0.zip
-
-
-# Third: install and build opencv_contrib
-#
-RUN cd \
-    && wget https://github.com/opencv/opencv_contrib/archive/4.1.0.zip \
-    && unzip 4.1.0.zip \
-    && cd opencv-4.1.0/build \
-    && cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.1.0/modules/ .. \
-    && make -j8 \
-    && make install \
-    && cd ../.. \
-    && rm 4.1.0.zip
-
-
-# Forth: get and build the Learning OpenCV 3 examples:
-#    I copy the needed data to where the executables will be: opencv-3.2.0/build/bin
-#
-RUN cd \
-    && git clone https://github.com/oreillymedia/Learning-OpenCV-3_examples.git \
-    && cd Learning-OpenCV-3_examples \
-    && mkdir build \
-    && cd build \
-    && cmake .. \
-    && make -j8
-
-#You could then run python and do your stuff...
-#CMD ["python"]
+    && make install
 
 WORKDIR /home
